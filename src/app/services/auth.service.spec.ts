@@ -14,10 +14,14 @@ describe('AuthService', () => {
 
   it('should return true from isAuthenticated when there is a token', () => {
     localStorage.setItem('token', '1234');
-    expect(service.isAuthenticated()).toBeTruthy();
+    service.isAuthenticated().then((authenticated) => {
+      expect(authenticated).toBeTruthy();
+    });
   });
 
   it('should return false from isAuthenticated when there is no token', () => {
-    expect(service.isAuthenticated()).toBeFalsy();
+    service.isAuthenticated().then((authenticated) => {
+      expect(authenticated).toBeFalsy();
+    })
   });
 });

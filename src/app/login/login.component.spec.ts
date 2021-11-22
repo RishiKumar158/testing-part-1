@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { ComponentFixture, fakeAsync, TestBed, tick, waitForAsync } from "@angular/core/testing";
 import { AuthService } from "../services/auth.service";
 import { LoginComponent } from "./login.component";
 
@@ -20,29 +20,42 @@ describe('Login Component', () => {
     authService = TestBed.inject(AuthService);
   });
 
-  it('needsLogin returns true when the user is not yet been authenticated', () => {
-    spyOn(authService, 'isAuthenticated').and.returnValue(false);
-    expect(component.needsLogin()).toBeTruthy();
-    expect(authService.isAuthenticated).toHaveBeenCalled();
+  it('Button label via jasmine.done', (done) => {
+    const compiled = fixture.nativeElement;
+    fixture.detectChanges();
+    expect(compiled.querySelector('a').textContent).toBe('Login');
+    let spy = spyOn(authService, 'isAuthenticated').and.returnValue(Promise.resolve(true));
+    component.ngOnInit();
+    spy.calls.mostRecent().returnValue.then(() => {
+      fixture.detectChanges();
+      expect(compiled.querySelector('a').textContent).toBe('Logout');
+      done();
+    });
   });
 
-  it('needsLogin returns false when the user has been authenticated', () => {
-    spyOn(authService, 'isAuthenticated').and.returnValue(true);
-    expect(component.needsLogin()).toBeFalsy();
-    expect(authService.isAuthenticated).toHaveBeenCalled();
-  });
+  it('Button label via waitForAsync() and whenStable()', waitForAsync(() => {
+    const compiled = fixture.nativeElement;
+    fixture.detectChanges();
+    expect(compiled.querySelector('a').textContent).toBe('Login');
+    spyOn(authService, 'isAuthenticated').and.returnValue(Promise.resolve(true));
+    fixture.whenStable().then(() => {
+      fixture.detectChanges();
+      expect(compiled.querySelector('a').textContent).toBe('Logout');
+    });
+    component.ngOnInit();
+  }));
 
-  it('login button hidden when the user is authenticated', () => {
+
+  it('button label via fakeAsync() and tick()', fakeAsync(() => {
     const compiled = fixture.nativeElement;
     expect(compiled.querySelector('a').textContent).toBe('');
-
     fixture.detectChanges();
     expect(compiled.querySelector('a').textContent).toBe('Login');
+    spyOn(authService, 'isAuthenticated').and.returnValue(Promise.resolve(true));
+    component.ngOnInit();
+    tick();
 
-    spyOn(authService, 'isAuthenticated').and.returnValue(true);
-    expect(compiled.querySelector('a').textContent).toBe('Login');
-    
     fixture.detectChanges();
     expect(compiled.querySelector('a').textContent).toBe('Logout');
-  });
+  }));
 });
